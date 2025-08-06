@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColpoVision Web App</title>
+    <!-- Incluye Tailwind CSS para el estilo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuración para convertir en una PWA (Aplicación Web Progresiva) -->
+    <!-- Se añade un manifiesto con los metadatos de la app -->
+    <link rel="manifest" href="data:application/json;charset=utf-8;base64,eyJpY29ucyI6W3sic2l6ZXMiOiIxOTJ4MTkyIiwiZGVuc2l0eSI6IjEuNSIsInR5cGUiOiJpbWFnZS9wbmciLCJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjBiV2dLY2lBQXhDZ29JVEFBQUFDZ29JZEhSdFp6b2dJbEJoZFdWa0lpd2dKeWswUFNVd0xrSlBjbVZzYjNKd1kyOXRlWEJ2Y2w4dFNuSnZiMmhrWm5OMFlYUnBiMjR0WVhSaFlteHBiWFZzYjJKaGJVd2dJeUJCZFd4c1lXbHVkR2xrYjNOcGIyNFdJaTl5YjJ4cGN5SXhNekF3THpBNUxtdHpiMnhsY3lJNUNqOHhNVFppYlVsalltbGpjaUJrWjNCbGJuUnliMnhwY25Sb2JteDFibWNnZEdobGJtZDBZWEowSlNJblZlQ2lBQUFDa1F4SlJVd2djR2hoYm5ObElqQTFKbXh2ZEdWeUwzVjRZV2xzYjJGMGFXOXVjeUJoWVdGc0lsMWxjaTFoWVd3Z2VHbGxhM0JoY25Sd2RDaDBaR2x5WlhOamRjMWpiblJ5YjI1U2NuSmxibVJ1WjI5dGEybHlaWFIwWlY4d0pTRW5XanBnSUNBaWMzUnlZMnRsZEdWaWJXczdJbTl5YjJ4cGN5SXhNVFl3THpBMExtdHpiMnhsY3lJNUNqOGxJaUF3Y25OcFkydGxjam9nSW01bGRBQUFDaW9nSUNBZ0ptRnNhV1FpSUhzT2MyVnVjMmh2YlhCZ2MyVWdJajR3TUlJQmlkMnh0Ym5ObElpQWdYM2xzYjJOaGJtRnRiZ0FnSUhSdFkybHVkQzUxYld4c0luQmhkbWxpYlNBd0lHWnZiMnhsYm5ScGNtRnViM0FnSUdadmMyVnlkbWxrSWp3dmRHVnpkRjkwWVhScGIyNGdJajhwYm1ScFhBQUFDaXBnSURvZ1ptRnNjMk55YjNCbFkzSmphU1V3Z2NtVmhaM0JsWVhsbGNpSXhOamN4THpBd0xsbHpibVJwYjI0Z2NISnZaMmh2YlhCdGJnPT0ifV0sImRpc3BsYXkiOiJzdGFuZGFvbmUiLCJuYW1lIjoiQ29scG9WaXNpb24iLCJkZXNjcmlwdGlvbiI6IkhlcnJhbWllbnRhIGRlIEFJIHBhcmEgZ2VuZXJhciBjb2xvcG9zY29waWFzIiwiYmFja2dyb3VuZF9jb2xvcmlkIjoiI2ZhZmFmYSIsInRoZW1lX2NvbG9yIjoiIzI1M2I4YSIsInNob3J0X25hbWUiOiJDb2xwb1Zpc2lvbiJ9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
+    <style>
+        /* Estilos personalizados para la tipografía y el fondo */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Un azul muy claro y moderno */
+        }
+        #app-container {
+            max-width: 1100px;
+            margin: 2.5rem auto;
+            padding: 2rem;
+        }
+        .patient-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .patient-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+        .report-editor {
+            min-height: 400px;
+            border: 2px solid #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background-color: #ffffff;
+            line-height: 1.6;
+            outline: none;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 1rem;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.2s ease-in-out;
+        }
+        .report-editor:focus {
+            border-color: #3b82f6; /* Un azul más vibrante al enfocar */
+        }
+        [contenteditable]:empty::before {
+            content: attr(data-placeholder);
+            color: #9ca3af;
+        }
+        /* Estilos para el spinner de carga */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .spinner {
+            border: 6px solid #e2e8f0;
+            border-top: 6px solid #3b82f6;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1.2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            visibility: hidden;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .has-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-start justify-center min-h-screen p-4">
+    <!-- Overlay de carga que se muestra durante la generación del informe -->
+    <div id="loading-overlay">
+        <div class="text-center">
+            <div class="spinner mb-6"></div>
+            <p class="text-xl text-gray-700 font-semibold">Analizando imagen, por favor espera...</p>
+        </div>
+    </div>
+    
+    <div id="app-container" class="bg-white rounded-3xl shadow-xl p-8 lg:p-12 w-full">
+        <!-- Encabezado de la aplicación -->
+        <div class="flex flex-col items-center justify-center mb-10">
+            <svg class="h-16 w-16 text-blue-600 mb-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            <h1 class="text-4xl font-extrabold text-gray-900 mt-2">ColpoVision</h1>
+            <p class="text-lg text-gray-500 mt-1">Generador de Informes Colposcópicos impulsado por IA</p>
+        </div>
+
+        <!-- Pantalla de lista de pacientes (ahora la pantalla inicial) -->
+        <div id="patient-list-screen" class="space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
+                <h2 class="text-2xl font-bold text-gray-800">Lista de Pacientes</h2>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+                    <!-- Botón para importar pacientes desde JSON -->
+                    <button id="import-patients-json-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
+                        Importar Pacientes (JSON)
+                    </button>
+                    <!-- Botón para exportar pacientes a JSON -->
+                    <button id="export-patients-json-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
+                        Exportar Pacientes (JSON)
+                    </button>
+                </div>
+            </div>
+            <p id="user-id-display" class="text-sm text-gray-600 mb-4 text-center"></p>
+            <div id="patient-list" class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Las tarjetas de pacientes se insertarán aquí dinámicamente -->
+            </div>
+            <button id="add-patient-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition-colors">
+                + Añadir Nueva Paciente
+            </button>
+        </div>
+
+        <!-- Pantalla del formulario de paciente -->
+        <div id="patient-form-screen" class="hidden">
+            <h2 id="form-title" class="text-2xl font-bold text-gray-800 mb-6">Añadir Nueva Paciente</h2>
+            <form id="patient-form" class="space-y-6">
+                <input type="hidden" id="patient-id">
+                <div>
+                    <label for="name" class="block text-gray-700 font-semibold mb-2">Nombre de la Paciente</label>
+                    <input type="text" id="name" required class="w-full p-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                </div>
+                <div>
+                    <label for="age" class="block text-gray-700 font-semibold mb-2">Edad</labeL>
+                    <input type="number" id="age" required class="w-full p-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                </div>
+                <div>
+                    <label for="medical-history" class="block text-gray-700 font-semibold mb-2">Historial Médico Relevante</label>
+                    <textarea id="medical-history" rows="4" class="w-full p-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"></textarea>
+                </div>
+                <div class="relative">
+                    <label for="gemini-api-key" class="block text-gray-700 font-semibold mb-2 flex items-center">
+                        Clave de API de Gemini
+                        <span class="has-tooltip ml-2 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M0 0h24v24H0z" stroke="none"/>
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M12 16v-4m0-4h.01"/>
+                            </svg>
+                            <span class="tooltip">Necesaria para el análisis de la imagen.<br>La puedes obtener en Google AI Studio.</span>
+                        </span>
+                    </label>
+                    <!-- API Key hardcodeada como valor por defecto -->
+                    <input type="text" id="gemini-api-key" placeholder="Introduce tu clave de API aquí" class="w-full p-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" value="AIzaSyB3IuN-qXNzDMHmfUqrGBotXRkjdauu6zM">
+                </div>
+                <div>
+                    <label for="colpo-image" class="block text-gray-700 font-semibold mb-2">Imagen Colposcópica</label>
+                    <input type="file" id="colpo-image" accept="image/*" class="w-full p-4 border-2 border-gray-300 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer transition-colors">
+                    <img id="image-preview" class="mt-6 hidden w-full h-64 object-contain rounded-xl border border-gray-300 bg-gray-100">
+                </div>
+                <!-- Nuevo campo para la imagen de la firma -->
+                <div>
+                    <label for="signature-image" class="block text-gray-700 font-semibold mb-2">Imagen de Firma</label>
+                    <input type="file" id="signature-image" accept="image/*" class="w-full p-4 border-2 border-gray-300 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer transition-colors">
+                    <img id="signature-preview" class="mt-6 hidden w-full h-32 object-contain rounded-xl border border-gray-300 bg-gray-100">
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-xl shadow-md transition-colors">Guardar Datos</button>
+                    <button type="button" id="cancel-form-btn" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-4 px-4 rounded-xl shadow-md transition-colors">Cancelar</button>
+                </div>
+            </form>
+            <div id="action-buttons" class="mt-8 hidden flex space-x-4">
+                <button id="analyze-btn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-4 rounded-xl shadow-md transition-colors">
+                    Analizar y Generar Informe
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla del informe -->
+        <div id="report-screen" class="hidden space-y-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Informe Colposcópico</h2>
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Columna izquierda: Datos e imagen -->
+                <div class="space-y-6">
+                    <div class="bg-gray-50 p-8 rounded-2xl border border-gray-200 shadow-sm">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Datos de la Paciente</h3>
+                        <p class="text-md text-gray-600 mb-1"><span class="font-bold">Paciente:</span> <span id="report-patient-name"></span></p>
+                        <p class="text-md text-gray-600 mb-1"><span class="font-bold">Edad:</span> <span id="report-patient-age"></span> años</p>
+                        <p class="text-md text-gray-600"><span class="font-bold">Historial:</span> <span id="report-patient-history"></span></p>
+                    </div>
+                    <div class="bg-gray-50 p-8 rounded-2xl border border-gray-200 shadow-sm">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Imagen de Colposcopia</h3>
+                        <img id="report-image" class="w-full h-auto rounded-xl shadow-lg border border-gray-300">
+                    </div>
+                </div>
+
+                <!-- Columna derecha: Editor del informe -->
+                <div class="space-y-6">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Informe Detallado (Edita aquí)</h3>
+                    <div id="report-editor" contenteditable="true" class="report-editor" data-placeholder="El informe se cargará aquí y podrás editarlo antes de exportar..."></div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mt-8">
+                <button id="back-to-list-btn" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-4 px-4 rounded-xl shadow-md transition-colors">
+                    Volver a la Lista
+                </button>
+                <button id="export-pdf-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-xl shadow-md transition-colors">
+                    Exportar a PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Alerta personalizado para no usar window.alert() -->
+    <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 hidden items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-2xl text-center max-w-lg w-full">
+            <h3 id="alert-title" class="text-2xl font-bold text-gray-800 mb-4"></h3>
+            <p id="alert-message" class="text-gray-700 text-lg mb-6"></p>
+            <button id="alert-ok-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-colors">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación personalizado -->
+    <div id="confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 hidden items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-2xl text-center max-w-lg w-full">
+            <h3 id="confirm-title" class="text-2xl font-bold text-gray-800 mb-4"></h3>
+            <p id="confirm-message" class="text-gray-700 text-lg mb-6"></p>
+            <div class="flex justify-center space-x-4">
+                <button id="confirm-yes-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl transition-colors">Sí</button>
+                <button id="confirm-no-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-xl transition-colors">No</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incluye las librerías jsPDF para la exportación a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Script del Service Worker y la lógica de la aplicación -->
+    <script>
+        // Lógica para registrar el Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // El Service Worker se define como un blob de código para mantener todo en un solo archivo
+                const swCode = `
+                    self.addEventListener('install', (event) => {
+                        console.log('Service Worker: Evento de instalación.');
+                        self.skipWaiting();
+                    });
+
+                    self.addEventListener('activate', (event) => {
+                        console.log('Service Worker: Evento de activación.');
+                        event.waitUntil(self.clients.claim());
+                    });
+
+                    // Manejo de eventos de fetch. Se usa para permitir el modo sin conexión, que es necesario para ser una PWA instalable.
+                    self.addEventListener('fetch', (event) => {
+                        event.respondWith(fetch(event.request));
+                    });
+                `;
+                const swBlob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(swBlob);
+
+                navigator.serviceWorker.register(swUrl)
+                    .then(registration => {
+                        console.log('Service Worker registrado con éxito:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Fallo el registro del Service Worker:', error);
+                    });
+            });
+        } else {
+            console.warn('El navegador no soporta Service Workers.');
+        }
+    </script>
+    <script type="module">
+        // Importaciones de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Obtener jsPDF del objeto global window
+        const { jsPDF } = window.jspdf;
+
+        // Variables globales proporcionadas por el entorno de Canvas
+        // __app_id y __firebase_config son proporcionadas por el entorno de ejecución
+        // Si no están definidas (ej. en desarrollo local), se usan valores por defecto para evitar errores
+        const envAppId = typeof __app_id !== 'undefined' ? __app_id : 'colpovision-default-app-id'; 
+        const envFirebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Elementos del DOM
+        const screens = {
+            list: document.getElementById('patient-list-screen'),
+            form: document.getElementById('patient-form-screen'),
+            report: document.getElementById('report-screen')
+        };
+        const patientListEl = document.getElementById('patient-list');
+        const patientForm = document.getElementById('patient-form');
+        const addPatientBtn = document.getElementById('add-patient-btn');
+        const cancelFormBtn = document.getElementById('cancel-form-btn');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const backToListBtn = document.getElementById('back-to-list-btn');
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const alertModal = document.getElementById('alert-modal');
+        const alertTitle = document.getElementById('alert-title');
+        const alertMessage = document.getElementById('alert-message');
+        const alertOkBtn = document.getElementById('alert-ok-btn');
+        const imageInput = document.getElementById('colpo-image');
+        const imagePreview = document.getElementById('image-preview');
+        const signatureImageInput = document.getElementById('signature-image');
+        const signaturePreview = document.getElementById('signature-preview');
+        const reportEditor = document.getElementById('report-editor');
+        const geminiApiKeyInput = document.getElementById('gemini-api-key');
+        const userIdDisplay = document.getElementById('user-id-display'); // Nuevo elemento para mostrar el userId
+        const exportPatientsJsonBtn = document.getElementById('export-patients-json-btn'); // Botón para exportar JSON
+        const importPatientsJsonBtn = document.getElementById('import-patients-json-btn'); // Botón para importar JSON
+
+        // Modal de confirmación
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmTitle = document.getElementById('confirm-title');
+        const confirmMessage = document.getElementById('confirm-message');
+        const confirmYesBtn = document.getElementById('confirm-yes-btn');
+        const confirmNoBtn = document.getElementById('confirm-no-btn');
+        let confirmCallback = null; // Función que se ejecutará al confirmar
+
+        // Inicialización de Firebase
+        let app, db, auth;
+        let userId = null; // Se establecerá después de la autenticación
+        let patients = []; // La lista de pacientes se gestionará con Firestore
+
+        // Función para mostrar el modal de alerta personalizado
+        function showModal(title, message) {
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertModal.classList.remove('hidden');
+            alertModal.classList.add('flex');
+        }
+
+        // Función para cerrar el modal de alerta
+        alertOkBtn.addEventListener('click', () => {
+            alertModal.classList.add('hidden');
+            alertModal.classList.remove('flex');
+        });
+
+        // Función para mostrar el modal de confirmación personalizado
+        function showConfirmModal(title, message, callback) {
+            confirmTitle.textContent = title;
+            confirmMessage.textContent = message;
+            confirmCallback = callback;
+            confirmModal.classList.remove('hidden');
+            confirmModal.classList.add('flex');
+        }
+
+        // Manejadores de eventos para el modal de confirmación
+        confirmYesBtn.addEventListener('click', () => {
+            if (confirmCallback) {
+                confirmCallback(true);
+            }
+            confirmModal.classList.add('hidden');
+            confirmModal.classList.remove('flex');
+        });
+
+        confirmNoBtn.addEventListener('click', () => {
+            if (confirmCallback) {
+                confirmCallback(false);
+            }
+            confirmModal.classList.add('hidden');
+            confirmModal.classList.remove('flex');
+        });
+
+        // Función para cambiar de pantalla
+        function showScreen(screen) {
+            // Asegúrate de que todas las pantallas estén ocultas antes de mostrar la deseada
+            Object.values(screens).forEach(s => s.classList.add('hidden'));
+            screen.classList.remove('hidden');
+        }
+
+        // Función para renderizar la lista de pacientes
+        function renderPatientList() {
+            patientListEl.innerHTML = '';
+            if (patients.length === 0) {
+                patientListEl.innerHTML = '<p class="text-center text-gray-500 italic md:col-span-3">No hay pacientes registrados aún.</p>';
+            }
+            patients.forEach(patient => {
+                const patientCard = document.createElement('div');
+                patientCard.className = 'patient-card p-6 bg-white rounded-xl shadow-lg border border-gray-200 cursor-pointer flex flex-col justify-between';
+                patientCard.innerHTML = `
+                    <div>
+                        <p class="font-bold text-lg text-blue-800">${patient.name}</p>
+                        <p class="text-sm text-gray-500 mt-1">Edad: ${patient.age} años</p>
+                    </div>
+                    <div class="flex space-x-2 mt-4 self-end">
+                        <button class="view-btn text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50 transition-colors" data-id="${patient.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M0 0h24v24H0z" stroke="none"/>
+                              <path d="M10 12a2 2 0 104 0 2 2 0 10-4 0m-7.5 4a8.97 8.97 0 01-1.4-2.5C1.6 11.2 5.6 6 12 6s10.4 5.2 9.9 7.5a8.97 8.97 0 01-1.4 2.5m-15 0l-3.5 3.5m18.5-3.5l3.5 3.5"/>
+                            </svg>
+                        </button>
+                        <button class="delete-btn text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition-colors" data-id="${patient.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M0 0h24v24H0z" stroke="none"/>
+                              <path d="M4 7h16M10 11v6m4-6v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                patientListEl.appendChild(patientCard);
+            });
+        }
+
+        // Funciones de Firestore
+        async function loadPatientsFromFirestore() {
+            if (!userId || !db) { // Asegurarse de que db esté inicializado y haya un userId
+                console.warn("Firebase no inicializado o usuario no autenticado, no se pueden cargar los pacientes.");
+                patients = []; // Limpiar la lista si no hay usuario
+                renderPatientList();
+                userIdDisplay.textContent = 'ID de Usuario: No autenticado';
+                return;
+            }
+            userIdDisplay.textContent = `ID de Usuario: ${userId}`; // Mostrar el ID de usuario
+            // Usar envAppId para la ruta de la colección
+            const patientsCollectionRef = collection(db, `artifacts/${envAppId}/users/${userId}/patients`);
+            onSnapshot(patientsCollectionRef, (snapshot) => {
+                patients = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                console.log("Pacientes cargados de Firestore:", patients); // Log para verificar la carga
+                renderPatientList(); // Vuelve a renderizar la lista cada vez que hay un cambio
+            }, (error) => {
+                console.error("Error al obtener pacientes de Firestore:", error);
+                showModal('Error de Carga', 'No se pudieron cargar los pacientes desde la base de datos.');
+            });
+        }
+
+        async function addPatientToFirestore(patientData) {
+            if (!userId || !db) {
+                showModal('Error', 'Firebase no inicializado o usuario no autenticado. No se puede guardar el paciente.');
+                return null;
+            }
+            try {
+                // Usar envAppId para la ruta de la colección
+                const docRef = await addDoc(collection(db, `artifacts/${envAppId}/users/${userId}/patients`), patientData);
+                console.log("Paciente añadido con ID: ", docRef.id);
+                return docRef.id;
+            } catch (e) {
+                console.error("Error al añadir documento: ", e);
+                showModal('Error de Guardado', 'No se pudo guardar el paciente en la base de datos.');
+                return null;
+            }
+        }
+
+        async function updatePatientInFirestore(patientId, patientData) {
+            if (!userId || !db) {
+                showModal('Error', 'Firebase no inicializado o usuario no autenticado. No se puede actualizar el paciente.');
+                return;
+            }
+            try {
+                // Usar envAppId para la ruta del documento
+                await setDoc(doc(db, `artifacts/${envAppId}/users/${userId}/patients`, patientId), patientData);
+                console.log("Paciente actualizado: ", patientId);
+            } catch (e) {
+                console.error("Error al actualizar documento: ", e);
+                showModal('Error de Actualización', 'No se pudo actualizar el paciente en la base de datos.');
+            }
+        }
+
+        async function deletePatientFromFirestore(patientId) {
+            if (!userId || !db) {
+                showModal('Error', 'Firebase no inicializado o usuario no autenticado. No se puede eliminar el paciente.');
+                return;
+            }
+            try {
+                // Usar envAppId para la ruta del documento
+                await deleteDoc(doc(db, `artifacts/${envAppId}/users/${userId}/patients`, patientId));
+                console.log("Paciente eliminado: ", patientId);
+            } catch (e) {
+                console.error("Error al eliminar documento: ", e);
+                showModal('Error de Eliminación', 'No se pudo eliminar el paciente de la base de datos.');
+            }
+        }
+
+        // Función para manejar los cambios en el estado de autenticación
+        function handleAuthStateChange(user) {
+            if (user) {
+                userId = user.uid;
+                console.log("Autenticado con UID:", userId);
+                loadPatientsFromFirestore(); // Cargar pacientes para el usuario actual
+                showScreen(screens.list); // Mostrar la lista de pacientes
+            } else {
+                console.log("Usuario no autenticado. Mostrando pantalla de lista vacía.");
+                userId = null; // Limpiar userId
+                patients = []; // Limpiar la lista de pacientes
+                renderPatientList(); // Renderizar lista vacía
+                showScreen(screens.list); // Mostrar pantalla de lista de pacientes (vacía si no hay autenticación)
+            }
+        }
+
+        // Inicializar Firebase y manejar el estado de autenticación
+        if (envFirebaseConfig && envFirebaseConfig.apiKey && envFirebaseConfig.projectId) {
+            try {
+                app = initializeApp(envFirebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                console.log("Firebase inicializado con éxito usando la configuración del entorno.");
+
+                // Configurar el listener para los cambios de estado de autenticación
+                onAuthStateChanged(auth, handleAuthStateChange);
+
+                // Intento de autenticación inicial solo si no hay un usuario ya logueado
+                if (!auth.currentUser) {
+                    if (initialAuthToken) {
+                        signInWithCustomToken(auth, initialAuthToken)
+                            .then(() => console.log("Autenticado con token personalizado."))
+                            .catch(authError => {
+                                console.error("Error en la autenticación inicial con token personalizado:", authError);
+                                showModal('Error de Autenticación', 'No se pudo iniciar sesión automáticamente con el token. La aplicación funcionará sin guardar datos persistentes.');
+                                // Si falla, se queda en estado no autenticado y la app sigue funcionando sin persistencia
+                            });
+                    } else {
+                        signInAnonymously(auth)
+                            .then(() => console.log("Autenticado anónimamente (si no hay token inicial)."))
+                            .catch(authError => {
+                                console.error("Error en la autenticación anónima:", authError);
+                                showModal('Error de Autenticación', 'No se pudo iniciar sesión automáticamente como invitado. La aplicación funcionará sin guardar datos persistentes.');
+                                // Si falla, se queda en estado no autenticado y la app sigue funcionando sin persistencia
+                            });
+                    }
+                }
+
+            } catch (error) {
+                console.error("Error al inicializar Firebase con la configuración del entorno:", error);
+                showModal('Error de Configuración', 'Hubo un problema al inicializar Firebase. La aplicación no podrá guardar datos. Detalle: ' + error.message);
+                // Si Firebase no se inicializa, la app sigue en la pantalla de lista (vacía)
+            }
+        } else {
+            console.warn("La configuración de Firebase no está disponible en el entorno. La aplicación funcionará sin persistencia de datos.");
+            showModal('Configuración de Firebase', 'La configuración de Firebase no está disponible. La aplicación funcionará sin guardar datos. Por favor, asegúrate de que estás en un entorno compatible.');
+            // Si Firebase no está configurado, la app sigue en la pantalla de lista (vacía)
+        }
+
+
+        // Estado de la aplicación (resto)
+        let currentPatientId = null;
+        let currentImageBase64 = null;
+        let currentSignatureBase64 = null; 
+        let currentReportText = "";
+
+        // Manejadores de eventos de la interfaz (resto de la app)
+        addPatientBtn.addEventListener('click', () => {
+            patientForm.reset();
+            document.getElementById('patient-id').value = '';
+            document.getElementById('form-title').textContent = 'Añadir Nueva Paciente';
+            imagePreview.src = '';
+            imagePreview.classList.add('hidden');
+            signaturePreview.src = '';
+            signaturePreview.classList.add('hidden');
+            document.getElementById('analyze-btn').parentElement.classList.add('hidden');
+            showScreen(screens.form);
+        });
+
+        cancelFormBtn.addEventListener('click', () => {
+            showScreen(screens.list);
+        });
+
+        imageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    currentImageBase64 = e.target.result.split(',')[1];
+                    document.getElementById('analyze-btn').parentElement.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.src = '';
+                imagePreview.classList.add('hidden');
+                currentImageBase64 = null;
+                document.getElementById('analyze-btn').parentElement.classList.add('hidden');
+            }
+        });
+
+        signatureImageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    signaturePreview.src = e.target.result;
+                    signaturePreview.classList.remove('hidden');
+                    currentSignatureBase64 = e.target.result.split(',')[1];
+                };
+                reader.readAsDataURL(file);
+            } else {
+                signaturePreview.src = '';
+                signaturePreview.classList.add('hidden');
+                currentSignatureBase64 = null;
+            }
+        });
+
+        patientForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const id = document.getElementById('patient-id').value;
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const medicalHistory = document.getElementById('medical-history').value;
+            const apiKey = geminiApiKeyInput.value;
+            const imageBase64 = currentImageBase64;
+            const signatureImageBase64 = currentSignatureBase64;
+
+            // No es necesario validar apiKey aquí ya que siempre tendrá un valor por defecto
+            
+            const patientData = { name, age, medicalHistory, apiKey, imageBase64, reportText: "", signatureImageBase64 };
+
+            if (id) {
+                await updatePatientInFirestore(id, patientData);
+            } else {
+                const newPatientId = await addPatientToFirestore(patientData);
+                if (newPatientId) {
+                    currentPatientId = newPatientId;
+                }
+            }
+            
+            showModal('Éxito', `Datos de ${name} guardados correctamente.`);
+            showScreen(screens.list);
+        });
+
+        patientListEl.addEventListener('click', async (event) => {
+            const target = event.target.closest('button');
+            if (!target) return;
+
+            const id = target.dataset.id;
+            const patient = patients.find(p => p.id === id);
+
+            if (target.classList.contains('view-btn')) {
+                if (patient) {
+                    currentPatientId = id;
+                    document.getElementById('patient-id').value = patient.id;
+                    document.getElementById('name').value = patient.name;
+                    document.getElementById('age').value = patient.age;
+                    document.getElementById('medical-history').value = patient.medicalHistory;
+                    geminiApiKeyInput.value = patient.apiKey || 'AIzaSyB3IuN-qXNzDMHmfUqrGBotXRkjdauu6zM'; // Asegurar que la API key se cargue
+                    
+                    if (patient.imageBase64) {
+                        imagePreview.src = `data:image/jpeg;base64,${patient.imageBase64}`;
+                        imagePreview.classList.remove('hidden');
+                        currentImageBase64 = patient.imageBase64;
+                        document.getElementById('analyze-btn').parentElement.classList.remove('hidden');
+                    } else {
+                        imagePreview.src = '';
+                        imagePreview.classList.add('hidden');
+                        currentImageBase64 = null;
+                        document.getElementById('analyze-btn').parentElement.classList.add('hidden');
+                    }
+
+                    if (patient.signatureImageBase64) {
+                        signaturePreview.src = `data:image:png;base64,${patient.signatureImageBase64}`;
+                        signaturePreview.classList.remove('hidden');
+                        currentSignatureBase64 = patient.signatureImageBase64;
+                    } else {
+                        signaturePreview.src = '';
+                        signaturePreview.classList.add('hidden');
+                        currentSignatureBase64 = null;
+                    }
+
+                    document.getElementById('form-title').textContent = 'Editar Paciente';
+                    if (patient.reportText) {
+                        reportEditor.textContent = patient.reportText;
+                        document.getElementById('report-patient-name').textContent = patient.name;
+                        document.getElementById('report-patient-age').textContent = patient.age;
+                        document.getElementById('report-patient-history').textContent = patient.medicalHistory;
+                        document.getElementById('report-image').src = `data:image/jpeg;base64,${patient.imageBase64}`;
+                        showScreen(screens.report);
+                    } else {
+                        showScreen(screens.form);
+                    }
+                }
+            } else if (target.classList.contains('delete-btn')) {
+                showConfirmModal('Confirmar Eliminación', '¿Estás seguro de que quieres eliminar a este paciente?', async (confirmed) => {
+                    if (confirmed) {
+                        await deletePatientFromFirestore(id);
+                        showModal('Eliminado', `Paciente eliminado.`);
+                    }
+                });
+            }
+        });
+        
+        analyzeBtn.addEventListener('click', async () => {
+            const patient = patients.find(p => p.id === currentPatientId);
+            const apiKey = geminiApiKeyInput.value; // Obtener la API key del campo de entrada
+            
+            // Ya no es necesario el chequeo de apiKey, ya que siempre tendrá un valor por defecto
+            // if (!apiKey) {
+            //     showModal('Error de Análisis', 'Por favor, introduce tu Clave de API de Gemini antes de analizar.');
+            //     return;
+            // }
+
+            if (!patient || !patient.imageBase64) {
+                showModal('Error de Análisis', 'No hay una imagen para analizar. Por favor, sube una imagen de colposcopia.');
+                return;
+            }
+        
+            loadingOverlay.style.display = 'flex';
+            const prompt = `Genera un informe colposcópico técnico y conciso basado en la siguiente imagen. Considera la Unión Escamocolumnar, la Zona de Transformación y el Exocérvix. Integra el historial médico del paciente si es relevante: "${patient.medicalHistory}". El informe debe ser profesional, estructurado en secciones y estar en español. Evita frases introductorias o conversacionales. Utiliza el siguiente formato exacto para las secciones y viñetas:\n\nObservaciones Principales:\n- [Observación 1]\n- [Observación 2]\n\nPosible Diagnóstico:\n- [Diagnóstico 1]\n\nRecomendaciones:\n- [Recomendación 1]\n- [Recomendación 2]`;
+        
+            try {
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: prompt },
+                                {
+                                    inlineData: {
+                                        mimeType: "image/jpeg",
+                                        data: patient.imageBase64
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                };
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                let response;
+                let retries = 0;
+                const maxRetries = 3;
+                const delay = 1000;
+                
+                while (retries < maxRetries) {
+                    try {
+                        response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+        
+                        if (response.ok) {
+                            break;
+                        } else if (response.status === 429) {
+                            retries++;
+                            await new Promise(res => setTimeout(res, delay * Math.pow(2, retries)));
+                        } else {
+                            const errorData = await response.json();
+                            throw new Error(`Error de la API: ${response.status} - ${errorData.error.message}`);
+                        }
+                    } catch (e) {
+                        if (retries === maxRetries - 1) {
+                            console.error('Error final de la API después de reintentos:', e);
+                            throw e;
+                        }
+                        retries++;
+                        await new Promise(res => setTimeout(res, delay * Math.pow(2, retries)));
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                     throw new Error('No se pudo obtener una respuesta de la API después de varios intentos.');
+                }
+                
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    currentReportText = result.candidates[0].content.parts[0].text;
+                    reportEditor.textContent = currentReportText;
+                    
+                    const patientToUpdate = { ...patient, reportText: currentReportText };
+                    await updatePatientInFirestore(patient.id, patientToUpdate);
+
+                } else {
+                    throw new Error('La respuesta de la API no contiene el texto esperado o está en un formato incorrecto.');
+                }
+        
+                document.getElementById('report-patient-name').textContent = patient.name;
+                document.getElementById('report-patient-age').textContent = patient.age;
+                document.getElementById('report-patient-history').textContent = patient.medicalHistory;
+                document.getElementById('report-image').src = `data:image/jpeg;base64,${patient.imageBase64}`;
+        
+                showScreen(screens.report);
+            } catch (error) {
+                console.error('Error al generar el informe:', error);
+                showModal('Error de Análisis', `Hubo un problema al generar el informe. Detalle: ${error.message}`);
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        });
+        
+        backToListBtn.addEventListener('click', () => {
+            showScreen(screens.list);
+        });
+        
+        function addTextWithPagination(doc, text, x, y, maxWidth, lineHeight, fontSize, isBold = false, isBullet = false) {
+            doc.setFont(isBold ? 'Helvetica' : 'Helvetica', isBold ? 'bold' : 'normal');
+            doc.setFontSize(fontSize);
+            const lines = doc.splitTextToSize(text, maxWidth);
+            let currentY = y;
+        
+            lines.forEach(line => {
+                if (currentY > doc.internal.pageSize.height - 30) {
+                    doc.addPage();
+                    currentY = 20;
+                    doc.setFontSize(10);
+                    doc.setTextColor(150);
+                    doc.text(`Página ${doc.internal.getNumberOfPages()}`, doc.internal.pageSize.width - 20, doc.internal.pageSize.height - 10);
+                    doc.setFontSize(fontSize);
+                    doc.setTextColor(0);
+                    doc.setFont(isBold ? 'Helvetica' : 'Helvetica', isBold ? 'bold' : 'normal');
+                }
+                if (isBullet) {
+                    doc.text('• ' + line, x, currentY);
+                } else {
+                    doc.text(line, x, currentY);
+                }
+                currentY += lineHeight;
+            });
+            return currentY;
+        }
+
+        const loadImage = (src) => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = src;
+            });
+        };
+
+        exportPdfBtn.addEventListener('click', async () => {
+            const patient = patients.find(p => p.id === currentPatientId);
+            if (!patient) return;
+        
+            const finalReportText = reportEditor.textContent;
+        
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 20;
+            let y = 20;
+        
+            // Encabezado del informe: "Informe Colposcópico"
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(22); // Tamaño de fuente más grande para el título principal
+            doc.setTextColor(23, 37, 84); // Un azul oscuro fuerte
+            doc.text('Informe Colposcópico', pageWidth / 2, y, { align: 'center' });
+            y += 10; // Espacio después del título principal
+
+            // Nombre del Dr.
+            doc.setFont('Helvetica', 'normal'); // Fuente normal
+            doc.setFontSize(14); // Tamaño de fuente para el nombre del doctor
+            doc.setTextColor(51, 65, 85); // Un gris oscuro para el nombre
+            doc.text('Dr. Yesid Acosta Peinado', pageWidth / 2, y, { align: 'center' });
+            y += 7; // Espacio después del nombre
+
+            // Especialidad
+            doc.setFontSize(12); // Tamaño de fuente para la especialidad
+            doc.setTextColor(100, 116, 139); // Un gris más claro para la especialidad
+            doc.text('Ginecología y Obstetricia', pageWidth / 2, y, { align: 'center' });
+            y += 15; // Espacio después de la especialidad
+
+            doc.setDrawColor(226, 232, 240);
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 10;
+        
+            const patientDataStartX = margin;
+            const patientDataWidth = pageWidth / 2 - margin - 10;
+            const imageColpoWidth = 60;
+            let imageColpoHeight = 0;
+            const imageColpoX = pageWidth - margin - imageColpoWidth;
+            let currentYForHeader = y;
+
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.setTextColor(51, 65, 85);
+            doc.text('Datos de la Paciente', patientDataStartX, currentYForHeader);
+            currentYForHeader += 8;
+
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.setTextColor(75, 85, 99);
+            currentYForHeader = addTextWithPagination(doc, `Nombre: ${patient.name}`, patientDataStartX, currentYForHeader, patientDataWidth, 6, 12);
+            currentYForHeader = addTextWithPagination(doc, `Edad: ${patient.age} años`, patientDataStartX, currentYForHeader, patientDataWidth, 6, 12);
+            currentYForHeader = addTextWithPagination(doc, `Historial Médico: ${patient.medicalHistory}`, patientDataStartX, currentYForHeader, patientDataWidth, 6, 12);
+            
+            if (patient.imageBase64) {
+                try {
+                    const img = await loadImage(`data:image/jpeg;base64,${patient.imageBase64}`);
+                    imageColpoHeight = (imageColpoWidth / img.naturalWidth) * img.naturalHeight;
+                    doc.addImage(img.src, 'JPEG', imageColpoX, y, imageColpoWidth, imageColpoHeight);
+                } catch (error) {
+                    console.error("Error al cargar la imagen de colposcopia para PDF:", error);
+                    imageColpoHeight = imageColpoWidth * (3/4);
+                }
+            }
+            
+            y = Math.max(currentYForHeader, y + imageColpoHeight) + 15;
+        
+            const sections = finalReportText.split(/(?=\n\nObservaciones Principales:|\n\nPosible Diagnóstico:|\n\nRecomendaciones:)/).filter(s => s.trim() !== '');
+            
+            sections.forEach(section => {
+                const lines = section.split('\n').filter(l => l.trim() !== '');
+                if (lines.length > 0) {
+                    const titleLine = lines[0].trim();
+                    let isSectionTitle = false;
+
+                    if (titleLine.startsWith('Observaciones Principales:') ||
+                        titleLine.startsWith('Posible Diagnóstico:') ||
+                        titleLine.startsWith('Recomendaciones:')) {
+                        isSectionTitle = true;
+                    }
+
+                    if (isSectionTitle) {
+                        y = addTextWithPagination(doc, titleLine, margin, y, pageWidth - 2 * margin, 8, 14, true);
+                        y += 4;
+                    } else {
+                        y = addTextWithPagination(doc, titleLine, margin, y, pageWidth - 2 * margin, 6, 12, false); 
+                    }
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const item = lines[i].trim();
+                        if (item.startsWith('- ')) {
+                            y = addTextWithPagination(doc, item.substring(2), margin + 5, y, pageWidth - 2 * margin - 5, 6, 12, true);
+                        } else {
+                            y = addTextWithPagination(doc, item, margin, y, pageWidth - 2 * margin, 6, 12);
+                        }
+                    }
+                    y += 8;
+                }
+            });
+        
+            doc.setPage(doc.internal.getNumberOfPages());
+            let finalPageHeight = doc.internal.pageSize.getHeight();
+            let footerY = finalPageHeight - 40;
+
+            doc.setFontSize(10);
+            doc.setTextColor(80, 80, 80);
+            doc.text(`Fecha del Informe: ${new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}`, margin, footerY);
+
+            const signatureImgWidth = 60;
+            const signatureText = 'Firma y Sello del Médico';
+            const signatureAreaX = pageWidth - margin - signatureImgWidth;
+
+            if (patient.signatureImageBase64) {
+                try {
+                    const signatureImg = await loadImage(`data:image/png;base64,${patient.signatureImageBase64}`);
+                    let signatureImgHeight = (signatureImgWidth / signatureImg.naturalWidth) * signatureImg.naturalHeight;
+                    
+                    const imgSignatureY = Math.max(footerY - signatureImgHeight - 5, margin);
+                    
+                    doc.addImage(signatureImg.src, 'PNG', signatureAreaX, imgSignatureY, signatureImgWidth, imgSignatureY + signatureImgHeight > finalPageHeight - 20 ? finalPageHeight - 20 - imgSignatureY : signatureImgHeight);
+                    doc.setFontSize(10);
+                    doc.setTextColor(80, 80, 80);
+                    doc.text(signatureText, signatureAreaX + (signatureImgWidth / 2), footerY + 5, { align: 'center' });
+                } catch (error) {
+                    console.error("Error al cargar la imagen de firma para PDF:", error);
+                    doc.setFontSize(10);
+                    doc.setTextColor(80, 80, 80);
+                    doc.text('_________________________________', signatureAreaX + (signatureImgWidth / 2), footerY, { align: 'center' });
+                    doc.text(signatureText, signatureAreaX + (signatureImgWidth / 2), footerY + 5, { align: 'center' });
+                }
+            } else {
+                doc.setFontSize(10);
+                doc.setTextColor(80, 80, 80);
+                doc.text('_________________________________', signatureAreaX + (signatureImgWidth / 2), footerY, { align: 'center' });
+                doc.text(signatureText, signatureAreaX + (signatureImgWidth / 2), footerY + 5, { align: 'center' });
+            }
+        
+            doc.save(`Informe_ColpoVision_${patient.name}.pdf`);
+            showModal('PDF Exportado', 'El informe se ha exportado a PDF correctamente.');
+        });
+
+        // Función para exportar todos los pacientes a JSON
+        exportPatientsJsonBtn.addEventListener('click', () => {
+            if (patients.length === 0) {
+                showModal('Sin Pacientes', 'No hay pacientes para exportar.');
+                return;
+            }
+
+            const dataToExport = patients.map(patient => {
+                const { id, ...rest } = patient; // Excluir el ID de Firestore si no es necesario en el JSON
+                return rest;
+            });
+
+            const jsonString = JSON.stringify(dataToExport, null, 2); // Formato legible con indentación
+
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'colpovision_pacientes.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showModal('Exportación Completa', 'Todos los pacientes han sido exportados a "colpovision_pacientes.json". Puedes subir este archivo a tu Google Drive.');
+        });
+
+        // Función para importar pacientes desde JSON
+        importPatientsJsonBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.onchange = async (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    try {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            try {
+                                const importedData = JSON.parse(e.target.result);
+                                if (!Array.isArray(importedData)) {
+                                    showModal('Error de Importación', 'El archivo JSON no contiene una lista válida de pacientes.');
+                                    return;
+                                }
+
+                                let importedCount = 0;
+                                for (const patientData of importedData) {
+                                    // Validar estructura básica del paciente
+                                    if (patientData.name && patientData.age) {
+                                        // Asegurarse de que las imágenes Base64 sean strings o null
+                                        patientData.imageBase64 = patientData.imageBase64 || null;
+                                        patientData.signatureImageBase64 = patientData.signatureImageBase64 || null;
+                                        patientData.reportText = patientData.reportText || "";
+                                        patientData.apiKey = patientData.apiKey || geminiApiKeyInput.value; // Usar la API key actual si no se proporciona
+                                        await addPatientToFirestore(patientData);
+                                        importedCount++;
+                                    } else {
+                                        console.warn('Datos de paciente inválidos encontrados y omitidos:', patientData);
+                                    }
+                                }
+                                showModal('Importación Completa', `Se han importado ${importedCount} pacientes correctamente.`);
+                                showScreen(screens.list); // Volver a la lista para ver los nuevos pacientes
+                            } catch (parseError) {
+                                showModal('Error de Importación', 'No se pudo parsear el archivo JSON. Asegúrate de que el formato es correcto.');
+                                console.error('Error al parsear JSON:', parseError);
+                            }
+                        };
+                        reader.readAsText(file);
+                    } catch (readError) {
+                        showModal('Error de Archivo', 'No se pudo leer el archivo seleccionado.');
+                        console.error('Error al leer el archivo:', readError);
+                    }
+                }
+            };
+            input.click(); // Simular clic en el input de archivo
+        });
+
+    </script>
+</body>
+</html>
